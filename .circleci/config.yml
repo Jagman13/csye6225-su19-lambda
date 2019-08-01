@@ -4,7 +4,7 @@ jobs:
     filters:
       branches:
         only:
-          - test
+          - assignment7
     docker:
       - image: circleci/python:3.6.5
     steps:
@@ -20,7 +20,7 @@ jobs:
           command: |
             pwd
             ls
-            cd webapp/librarymanagementsystem
+            cd csye-6225-aws-lambda
             ./mvnw clean package
             pwd
             ls -al
