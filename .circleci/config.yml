@@ -4,7 +4,7 @@ jobs:
     filters:
       branches:
         only:
-          - assignment7
+          - test
     docker:
       - image: circleci/python:3.6.5
     steps:
@@ -18,31 +18,38 @@ jobs:
       - run:
           name: Build WAR
           command: |
+            echo "Current directory ->"
             pwd
-            ls
+            echo "list"
+            ls -al
             cd csye-6225-aws-lambda
+            echo "Current directory ->"
+            pwd
+            echo "list"
+            ls
             ./mvnw clean package
+            echo "Current directory ->"
             pwd
-            ls -al
-            pwd
-      - run:
-          name: Build Deployment Artifact
-          command: |
-            echo "Hello the current build number is ${CIRCLE_BUILD_NUM}"
-            pwd
-            ls -al
-            mkdir -p codedeploy_artifact
-            zip -r csye6225-webapp-${CIRCLE_BUILD_NUM}.zip webapp/librarymanagementsystem/target/librarymanagementsystem-0.0.1-SNAPSHOT.war infrastructure/aws/codedeploy/*.sh appspec.yml
-            ls -al
-            mv csye6225-webapp-${CIRCLE_BUILD_NUM}.zip codedeploy_artifact/
-            ls -al
-            pwd
-            cd codedeploy_artifact
-            ls -al
-            pwd
-            cd ..
-            pwd
-            ls -al
+            echo "list"
+            ls
+      # - run:
+      #     name: Build Deployment Artifact
+      #     command: |
+      #       echo "Hello the current build number is ${CIRCLE_BUILD_NUM}"
+      #       pwd
+      #       ls -al
+      #       mkdir -p codedeploy_artifact
+      #       zip -r csye6225-webapp-${CIRCLE_BUILD_NUM}.zip webapp/librarymanagementsystem/target/librarymanagementsystem-0.0.1-SNAPSHOT.war infrastructure/aws/codedeploy/*.sh appspec.yml
+      #       ls -al
+      #       mv csye6225-webapp-${CIRCLE_BUILD_NUM}.zip codedeploy_artifact/
+      #       ls -al
+      #       pwd
+      #       cd codedeploy_artifact
+      #       ls -al
+      #       pwd
+      #       cd ..
+      #       pwd
+      #       ls -al
       - run:
           name: Upload Artifact to S3
           command: aws s3 cp ./codedeploy_artifact/csye6225-webapp-${CIRCLE_BUILD_NUM}.zip s3://${S3_BUCKET_NAME}/csye6225-webapp-${CIRCLE_BUILD_NUM}.zip
