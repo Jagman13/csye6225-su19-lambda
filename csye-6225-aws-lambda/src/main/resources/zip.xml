@@ -15,6 +15,9 @@
             <directory>${project.build.directory}/classes</directory>
             <outputDirectory>/</outputDirectory>
         </fileSet>
+        <includes>
+            <include>appspec*</include>
+        </includes>
     </fileSets>
     <dependencySets>
         <dependencySet>
