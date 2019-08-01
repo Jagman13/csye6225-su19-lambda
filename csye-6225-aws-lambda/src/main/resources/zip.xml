@@ -19,7 +19,7 @@
             <directory>${project.basedir}</directory>
             <outputDirectory>/</outputDirectory>
             <includes>
-                <include>appspec.yml</include>
+                <include>appspec.yaml</include>
             </includes>
         </fileSet>
     </fileSets>
