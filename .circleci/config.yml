@@ -31,7 +31,12 @@ jobs:
             echo "Current directory ->"
             pwd
             echo "list"
-            ls
+            ls -la
+            cd target
+            echo "Current directory ->"
+            pwd
+            echo "listing all elements"
+            ls -la
       # - run:
       #     name: Build Deployment Artifact
       #     command: |
