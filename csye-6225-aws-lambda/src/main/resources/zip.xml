@@ -15,7 +15,14 @@
             <directory>${project.build.directory}/classes</directory>
             <outputDirectory>/</outputDirectory>
           </fileSet>
-          </fileSets>
+        <fileSet>
+            <directory>${project.build.directory}</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>*.yml</include>
+            </includes>
+        </fileSet>
+    </fileSets>
     <dependencySets>
         <dependencySet>
             <outputDirectory>lib</outputDirectory>
