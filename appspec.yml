@@ -1,0 +1,9 @@
+version: 0.0
+Resources:
+  - myLambdaFunction:
+      Type: AWS::Lambda::Function
+      Properties:
+        Name: "lambda1-AppStack"
+        Alias: "lambda1-AppStack"
+        CurrentVersion: "1"
+        TargetVersion: "2"
