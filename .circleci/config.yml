@@ -57,7 +57,7 @@ jobs:
       #       ls -al
       - run:
           name: Upload Artifact to S3
-          command: aws s3 cp ./codedeploy_artifact/csye6225-webapp-${CIRCLE_BUILD_NUM}.zip s3://${S3_BUCKET_NAME}/csye6225-webapp-${CIRCLE_BUILD_NUM}.zip
+          command: aws s3 cp ./csye-6225-aws-lambda/target/aws-lambda-0.0.1.zip s3://${S3_BUCKET_NAME}/aws-lambda-0.0.1-${CIRCLE_BUILD_NUM}.zip
       - run:
           name: Deploy artifact to ec2 instance
           command: |
