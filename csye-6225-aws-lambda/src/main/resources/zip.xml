@@ -15,6 +15,10 @@
             <directory>${project.build.directory}/classes</directory>
             <outputDirectory>/</outputDirectory>
         </fileSet>
+        <fileSet>
+            <directory>${project.build.directory}/appspec.yml</directory>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>
     </fileSets>
     <dependencySets>
         <dependencySet>
