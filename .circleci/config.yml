@@ -64,5 +64,5 @@ jobs:
             aws deploy create-deployment \
             --application-name csye6225-Lambda-function \
             --deployment-group-name csye6225-lambda-deployment \
-            --s3-location bucket=${S3_BUCKET_NAME},bundleType=JSON|YAML,key=aws-lambda-0.0.1-${CIRCLE_BUILD_NUM}.zip \
+            --s3-location bucket=${S3_BUCKET_NAME},bundleType=YAML,key=aws-lambda-0.0.1-${CIRCLE_BUILD_NUM}.zip \
             --region ${AWS_REGION}
