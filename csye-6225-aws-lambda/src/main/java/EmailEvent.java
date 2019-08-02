@@ -29,37 +29,32 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
 
         UUID token = UUID.randomUUID();
         String toEmail= request.getRecords().get(0).getSNS().getMessage();
+
         long currentEpochTime= System.currentTimeMillis() / 1000L;
+
         context.getLogger().log("Current epcho time:" + currentEpochTime);
-        long expirationTime = currentEpochTime + 300;
+
+        long ttl = Integer.parseInt(System.getenv("ttl")) * 60;
+
+        context.getLogger().log("TTL:" + ttl);
+
+        long expirationTime = currentEpochTime + ttl;
+
         context.getLogger().log("Expiration epcho time:" + expirationTime);
-        String fromEmail="yogita@csye6225-su19-patilyo.me";
+
+        String domain=System.getenv("domain");
+
+        context.getLogger().log("Domain :" +domain);
+
+        String fromEmail=System.getenv("fromemail");
+
         context.getLogger().log(toEmail);
 
-        QuerySpec spec = new QuerySpec()
-                .withKeyConditionExpression("Email = :email")
-                .withFilterExpression("ttl_timestamp > :ttl")
-                .withValueMap(new ValueMap()
-                        .withString(":email", toEmail)
-                        .withNumber(":ttl", currentEpochTime))
-                .withConsistentRead(true);
-        ItemCollection<QueryOutcome> items = table.query(spec);
-        Iterator<Item> iterator = items.iterator();
-        while (iterator.hasNext()) {
-            context.getLogger().log(iterator.next().toJSONPretty());
-        }
-        context.getLogger().log(String.valueOf(items.getAccumulatedItemCount()));
-        if(items.getAccumulatedItemCount() == 0){
-            sendEmail(fromEmail, toEmail, String.valueOf(token), context);
-            Item item = new Item()
-
-                    .withPrimaryKey("Email", toEmail)
-
-                    .withString("Token", String.valueOf(token))
-
-                    .withNumber("ttl_timestamp", expirationTime);
-
-            PutItemOutcome outcome = table.putItem(item);
+        int itemCount = getItemCount(table, toEmail, context, currentEpochTime);
+        context.getLogger().log(String.valueOf(itemCount));
+        if(itemCount == 0){
+            sendEmail(domain, fromEmail, toEmail, String.valueOf(token), context);
+            putItem(table, toEmail, String.valueOf(token), expirationTime);
             //context.getLogger().log(outcome.getItem().toJSONPretty());
         }
 
@@ -68,9 +63,9 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
         return null;
     }
 
-    private void sendEmail(String fromEmail, String toEmail, String token, Context context){
+    private void sendEmail(String domain, String fromEmail, String toEmail, String token, Context context){
         try {
-            String domain= "example.com";
+
             String TEXTBODY="http://"+ domain +"/reset?email="+ toEmail + "&token=" + token;
             String HTMLBODY="<p>"+TEXTBODY+"<p>";
 
@@ -94,5 +89,32 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
             context.getLogger().log("The email was not sent. Error message: "
                     + ex.getMessage());
         }
+    }
+
+    private void putItem(Table table, String toEmail, String token, long expirationTime){
+        Item item = new Item()
+                .withPrimaryKey("Email", toEmail)
+                .withString("Token", String.valueOf(token))
+                .withNumber("ttl_timestamp", expirationTime);
+
+        PutItemOutcome outcome = table.putItem(item);
+    }
+
+    private int getItemCount(Table table, String toEmail, Context context, long currentEpochTime){
+        QuerySpec spec = new QuerySpec()
+                .withKeyConditionExpression("Email = :email")
+                .withFilterExpression("ttl_timestamp > :ttl")
+                .withValueMap(new ValueMap()
+                        .withString(":email", toEmail)
+                        .withNumber(":ttl", currentEpochTime))
+                .withConsistentRead(true);
+
+        ItemCollection<QueryOutcome> items = table.query(spec);
+        Iterator<Item> iterator = items.iterator();
+        while (iterator.hasNext()) {
+            context.getLogger().log(iterator.next().toJSONPretty());
+        }
+
+        return items.getAccumulatedItemCount();
     }
 }
