@@ -53,8 +53,10 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
         int itemCount = getItemCount(table, toEmail, context, currentEpochTime);
         context.getLogger().log(String.valueOf(itemCount));
         if(itemCount == 0){
-            sendEmail(domain, fromEmail, toEmail, String.valueOf(token), context);
-            putItem(table, toEmail, String.valueOf(token), expirationTime);
+            boolean status= sendEmail(domain, fromEmail, toEmail, String.valueOf(token), context);
+            if(status){
+                putItem(table, toEmail, String.valueOf(token), expirationTime);
+            }
             //context.getLogger().log(outcome.getItem().toJSONPretty());
         }
 
@@ -63,7 +65,7 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
         return null;
     }
 
-    private void sendEmail(String domain, String fromEmail, String toEmail, String token, Context context){
+    private boolean sendEmail(String domain, String fromEmail, String toEmail, String token, Context context){
         try {
 
             String TEXTBODY="http://"+ domain +"/reset?email="+ toEmail + "&token=" + token;
@@ -85,9 +87,11 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
                     .withSource(fromEmail);
             client.sendEmail(request);
             context.getLogger().log("Email sent!");
+            return true;
         } catch (Exception ex) {
             context.getLogger().log("The email was not sent. Error message: "
                     + ex.getMessage());
+            return false;
         }
     }
 
