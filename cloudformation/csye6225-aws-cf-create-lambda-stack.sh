@@ -26,7 +26,7 @@ echo "Creating stack..."
 aws cloudformation create-stack --stack-name $APP_STACK_NAME --template-body file://csye6225-cf-lambda.json \
 --parameters ParameterKey=S3CodeDeployBucket,ParameterValue=$CODEDEPLOYBUCKET\
  ParameterKey=CFNUser,ParameterValue=$USER\
- ParameterKey=fromaddress,ParameterValue=$FROMADDRESS\
+ ParameterKey=domain,ParameterValue=$FROMADDRESS\
  --capabilities CAPABILITY_NAMED_IAM
 
 if [ $? -eq 0 ]; then

@@ -14,10 +14,10 @@
          "Description": "S3 bucket name where code deploy artifacts are stored",
          "Type": "String"
        },
-       "fromaddress":{
-         "Description": "from address for SES",
+       "domain":{
+         "Description": "domain for  for SES",
          "Type": "String",
-          "Default":"honraoa@csye6225-su19-honraoa.me"
+         "Default": "csye6225-su19-kaurj.me"
        }
      },
 
@@ -94,7 +94,7 @@
           "Description" : "lambda function for reset Passowrd",
           "Environment" :
             {
-              "Variables" : {"fromaddress" : {"Ref":"fromaddress"} }
+              "Variables" : {"domain" : {"Ref":"domain"} }
             },
           "Runtime": "java8",
           "Timeout": 300,

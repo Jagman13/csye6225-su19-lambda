@@ -1,5 +1,6 @@
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Iterator;
 import java.util.UUID;
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
@@ -28,9 +29,17 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
 
         UUID token = UUID.randomUUID();
         String toEmail= request.getRecords().get(0).getSNS().getMessage();
+
         long currentEpochTime= System.currentTimeMillis() / 1000L;
-        long expirationTime = currentEpochTime + 60;
-        String fromEmail="jagman@csye6225-su19-kaurj.me";
+
+        context.getLogger().log("Current epcho time:" + currentEpochTime);
+        long expirationTime = currentEpochTime + 300;
+
+        context.getLogger().log("Expiration epcho time:" + expirationTime);
+
+        String domain=System.getenv("domain");
+
+        context.getLogger().log("Domain :" +domain);
         context.getLogger().log(toEmail);
 
         QuerySpec spec = new QuerySpec()
@@ -40,9 +49,15 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
                         .withString(":email", toEmail)
                         .withNumber(":ttl", currentEpochTime))
                 .withConsistentRead(true);
+
         ItemCollection<QueryOutcome> items = table.query(spec);
-        if(items.getTotalCount() == 0){
-            sendEmail(fromEmail, toEmail, String.valueOf(token), context);
+        Iterator<Item> iterator = items.iterator();
+        while (iterator.hasNext()) {
+            context.getLogger().log(iterator.next().toJSONPretty());
+        }
+        context.getLogger().log(String.valueOf(items.getAccumulatedItemCount()));
+        if(items.getAccumulatedItemCount() == 0){
+            sendEmail(domain, toEmail, String.valueOf(token), context);
             Item item = new Item()
 
                     .withPrimaryKey("Email", toEmail)
@@ -60,9 +75,10 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
         return null;
     }
 
-    private void sendEmail(String fromEmail, String toEmail, String token, Context context){
+    private void sendEmail(String domain, String toEmail, String token, Context context){
         try {
-            String domain= "example.com";
+
+            String FROMEMAIL = "reset_password@"+domain;
             String TEXTBODY="http://"+ domain +"/reset?email="+ toEmail + "&token=" + token;
             String HTMLBODY="<p>"+TEXTBODY+"<p>";
 
@@ -79,7 +95,7 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
                                             .withCharset("UTF-8").withData(TEXTBODY)))
                             .withSubject(new Content()
                                     .withCharset("UTF-8").withData("Reset Password")))
-                    .withSource(fromEmail);
+                    .withSource(FROMEMAIL);
             client.sendEmail(request);
             context.getLogger().log("Email sent!");
         } catch (Exception ex) {
