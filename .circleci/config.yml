@@ -39,7 +39,7 @@ jobs:
             ls -la
       - run:
           name: Upload Artifact to S3
-          command: aws s3 cp ./csye-6225-aws-lambda/target/aws-lambda-0.0.1.zip s3://${S3_BUCKET_NAME}/aws-lambda-0.0.1-${CIRCLE_BUILD_NUM}.zip
+          command: aws s3 cp ./csye-6225-aws-lambda/target/aws-lambda-0.0.1.zip s3://${S3_BUCKET_NAME}/aws-lambda-0.0.1.zip
       - run:
           name: Deploying Artifact to lambda function
-          command: aws lambda update-function-code --function-name myLambda --s3-bucket ${S3_BUCKET_NAME} --s3-key aws-lambda-0.0.1-${CIRCLE_BUILD_NUM}.zip
+          command: aws lambda update-function-code --function-name myLambda --s3-bucket ${S3_BUCKET_NAME} --s3-key aws-lambda-0.0.1.zip
