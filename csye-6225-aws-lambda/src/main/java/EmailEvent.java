@@ -45,9 +45,6 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
                 .withConsistentRead(true);
         ItemCollection<QueryOutcome> items = table.query(spec);
         Iterator<Item> iterator = items.iterator();
-        while (iterator.hasNext()) {
-            context.getLogger().log(iterator.next().toJSONPretty());
-        }
         context.getLogger().log(String.valueOf(items.getAccumulatedItemCount()));
         if(items.getAccumulatedItemCount() == 0){
             sendEmail(fromEmail, toEmail, String.valueOf(token), context);
