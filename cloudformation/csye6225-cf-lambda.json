@@ -1,0 +1,269 @@
+  {
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "AWS CloudFormation Template",
+    "Parameters" : {
+      "SNSName":{
+         "Default":"reset_password",
+         "Type": "String"
+
+     },    "CFNUser" : {
+           "Type": "String",
+           "Default": "circleci"
+         },
+       "S3CodeDeployBucket":{
+         "Description": "S3 bucket name where code deploy artifacts are stored",
+         "Type": "String"
+       },
+       "fromaddress":{
+         "Description": "from address for SES",
+         "Type": "String",
+          "Default":"honraoa@csye6225-su19-honraoa.me"
+       }
+     },
+
+
+
+    "Resources" :{
+          "CodeDeployLambdaServiceRole": {
+            "DependsOn" : ["CodeDeployLambdaS3"],
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+               "Version" : "2012-10-17",
+               "Statement": [ {
+                "Effect": "Allow",
+                "Principal": {
+                 "Service": [ "codedeploy.us-east-1.amazonaws.com" ]
+               },
+               "Action": [ "sts:AssumeRole" ]
+             } ]
+             },
+             "ManagedPolicyArns":[
+              "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda",
+              {"Ref" : "CodeDeployLambdaS3"}
+            ],
+             "Path": "/",
+             "RoleName": "CodeDeployLambdaServiceRole"
+           }
+         },
+
+      "CodeDeployApplication": {
+        "Type": "AWS::CodeDeploy::Application",
+        "Properties": {
+          "ApplicationName" : "csye6225-Lambda-function",
+          "ComputePlatform": "Lambda"
+        }
+      },
+
+      "LambdaDeploymentGroup" : {
+        "DependsOn" : ["CodeDeployLambdaServiceRole"],
+        "Type" : "AWS::CodeDeploy::DeploymentGroup",
+        "Properties" : {
+          "ApplicationName" : "csye6225-Lambda-function",
+          "DeploymentConfigName" : "CodeDeployDefault.LambdaAllAtOnce",
+          "DeploymentGroupName": "csye6225-lambda-deployment",
+          "DeploymentStyle":{
+            "DeploymentOption" : "WITH_TRAFFIC_CONTROL",
+            "DeploymentType" : "BLUE_GREEN"
+          },
+          "AutoRollbackConfiguration": {
+            "Enabled": "true",
+            "Events": [ "DEPLOYMENT_FAILURE" ]
+          },
+          "ServiceRoleArn" : {
+            "Fn::GetAtt" : [
+              "CodeDeployLambdaServiceRole",
+              "Arn"
+            ]
+          }
+        }
+      },
+
+      "myLambda": {
+        "Type": "AWS::Lambda::Function",
+        "DependsOn" : ["LambdaExecutionRole","CodeDeployApplication"],
+        "Properties": {
+          "FunctionName":"myLambda",
+          "Handler" : "EmailEvent",
+          "Role": {"Fn::GetAtt" : ["LambdaExecutionRole", "Arn"] },
+          "Code":
+            {
+              "S3Bucket" : "code-deploy.csye6225-su19-honraoa.me",
+              "S3Key" : "aws-lambda-0.0.1.zip"
+            },
+          "Description" : "lambda function for reset Passowrd",
+          "Environment" :
+            {
+              "Variables" : {"fromaddress" : {"Ref":"fromaddress"} }
+            },
+          "Runtime": "java8",
+          "Timeout": 300,
+          "MemorySize":512
+          }
+        },
+
+      "mySNSTopic":{
+        "Type" : "AWS::SNS::Topic",
+        "DependsOn" : "myLambda",
+        "Properties" : {
+        "TopicName" : {"Ref":"SNSName"},
+        "Subscription":[{"Endpoint":{"Fn::GetAtt":[
+                         "myLambda","Arn"
+                ]},"Protocol":"lambda"
+                }],
+                "DisplayName":"ResetPassword"
+            }
+
+        },
+
+
+        "snsIAMRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName" : "snsIAMRole",
+                "AssumeRolePolicyDocument": {
+                    "Version" : "2012-10-17",
+                    "Statement": [ {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": [ "ssm.amazonaws.com" ]
+                        },
+                        "Action": [ "sts:AssumeRole" ]
+                    } ]
+                },
+                "Path": "/",
+                "Policies": [ {
+                    "PolicyName": "snsFullAccess",
+                    "PolicyDocument": {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                        {
+                            "Action": ["sns:*"],
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        }]
+                    }
+                }]
+            }
+        },
+
+      "LambdaExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [
+                "lambda.amazonaws.com"
+              ]
+            },
+            "Action": [
+              "sts:AssumeRole"
+            ]
+          }]
+        },
+        "Path": "/",
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess",
+          "arn:aws:iam::aws:policy/AmazonSESFullAccess",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole"
+        ],
+        "RoleName": "LambdaExecutionRole"
+      }
+    },
+    "CirlceCICodeDeployLambda" : {
+      "Type" : "AWS::IAM::ManagedPolicy",
+      "Properties" : {
+        "ManagedPolicyName": "CirlceCI-Code-Deploy-Lambda",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "codedeploy:RegisterApplicationRevision",
+                "codedeploy:GetApplicationRevision"
+              ],
+              "Resource": [
+                {"Fn::Join" : [ "", [ "arn:aws:codedeploy:", { "Ref" : "AWS::Region" }, ":", { "Ref" : "AWS::AccountId" }, ":application:csye6225-Lambda-function" ] ]}
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "codedeploy:CreateDeployment",
+                "codedeploy:GetDeployment"
+              ],
+              "Resource": [
+                "*"
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "codedeploy:GetDeploymentConfig"
+              ],
+              "Resource": [
+                {"Fn::Join" : [ "", [ "arn:aws:codedeploy:", { "Ref" : "AWS::Region" }, ":", { "Ref" : "AWS::AccountId" }, ":deploymentconfig:CodeDeployDefault.OneAtATime"] ]},
+                {"Fn::Join" : [ "", [ "arn:aws:codedeploy:", { "Ref" : "AWS::Region" }, ":", { "Ref" : "AWS::AccountId" }, ":deploymentconfig:CodeDeployDefault.HalfAtATime"] ]},
+                {"Fn::Join" : [ "", [ "arn:aws:codedeploy:", { "Ref" : "AWS::Region" }, ":", { "Ref" : "AWS::AccountId" }, ":deploymentconfig:CodeDeployDefault.LambdaAllAtOnce"] ]}
+              ]
+            }
+          ]
+        },
+        "Users" : [ { "Ref" : "CFNUser" } ]
+      }
+    },
+              "CodeDeployLambdaS3" : {
+                "Type" : "AWS::IAM::ManagedPolicy",
+                "Properties" : {
+                  "ManagedPolicyName": "CodeDeploy-Lambda-S3",
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Action": [
+                          "s3:Get*",
+                          "s3:List*"
+                        ],
+                        "Effect": "Allow",
+                        "Resource":[
+                          {"Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "S3CodeDeployBucket" }] ]},
+                          {"Fn::Join" : [ "", [ "arn:aws:s3:::", { "Ref" : "S3CodeDeployBucket" }, "/*"] ]}
+                        ]
+                      }
+                    ]
+                  },
+                  "Users" : [ { "Ref" : "CFNUser" } ]
+                }
+              },
+              "CirlceCILambda" : {
+                "Type" : "AWS::IAM::ManagedPolicy",
+                "Properties" : {
+                  "ManagedPolicyName": "CirlceCILambda",
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Action": [
+                          "lambda:List*",
+                          "lambda:Create*",
+                          "lambda:Update*",
+                          "lambda:List*"
+                        ],
+                        "Effect": "Allow",
+                        "Resource":[
+                        {"Fn::GetAtt" : ["myLambda", "Arn"] }
+                        ]
+                      }
+                    ]
+                  },
+                  "Users" : [ { "Ref" : "CFNUser" } ]
+                }
+              }
+
+    }
+  }
