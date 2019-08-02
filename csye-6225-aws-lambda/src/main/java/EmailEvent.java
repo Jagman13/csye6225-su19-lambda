@@ -29,7 +29,7 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
         UUID token = UUID.randomUUID();
         String toEmail= request.getRecords().get(0).getSNS().getMessage();
         long currentEpochTime= System.currentTimeMillis() / 1000L;
-        long expirationTime = currentEpochTime + 60;
+        long expirationTime = currentEpochTime + 300;
         String fromEmail="yogita@csye6225-su19-patilyo.me";
         context.getLogger().log(toEmail);
 
@@ -41,6 +41,7 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
                         .withNumber(":ttl", currentEpochTime))
                 .withConsistentRead(true);
         ItemCollection<QueryOutcome> items = table.query(spec);
+        context.getLogger().log(String.valueOf(items.getTotalCount()));
         if(items.getTotalCount() == 0){
             sendEmail(fromEmail, toEmail, String.valueOf(token), context);
             Item item = new Item()
