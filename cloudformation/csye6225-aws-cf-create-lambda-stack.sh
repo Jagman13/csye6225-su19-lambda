@@ -5,17 +5,18 @@
  help_me()
 {
 	  echo "Usage:-"
-	  echo "$0 <Application-Stack-Name> <S3CodeDeployBucket> <User> <fromaddress>"
+	  echo "$0 <Application-Stack-Name> <S3CodeDeployBucket> <User> <domain> <fromemail>"
 	  exit
 }
 
-	APP_STACK_NAME=$1-LambdaStack
+  APP_STACK_NAME=$1-LambdaStack
   CODEDEPLOYBUCKET=$2
   USER=$3
-  FROMADDRESS=$4
+  DOMAIN=$4
+  FROM=$5
 
 
-	if [ $# -ne 4 ]
+	if [ $# -ne 5 ]
 	then
 		echo -e "You are missing some parameters"
 		help_me
@@ -26,7 +27,8 @@ echo "Creating stack..."
 aws cloudformation create-stack --stack-name $APP_STACK_NAME --template-body file://csye6225-cf-lambda.json \
 --parameters ParameterKey=S3CodeDeployBucket,ParameterValue=$CODEDEPLOYBUCKET\
  ParameterKey=CFNUser,ParameterValue=$USER\
- ParameterKey=domain,ParameterValue=$FROMADDRESS\
+ ParameterKey=domain,ParameterValue=$DOMAIN\
+ ParameterKey=fromemail,ParameterValue=$FROM\
  --capabilities CAPABILITY_NAMED_IAM
 
 if [ $? -eq 0 ]; then

@@ -25,7 +25,7 @@
 
        "fromemail":{
         "Description": "from address  for SES",
-         "Type": "String",
+         "Type": "String"
 
        }
      },
@@ -33,58 +33,12 @@
 
 
     "Resources" :{
-          "CodeDeployLambdaServiceRole": {
-            "DependsOn" : ["CodeDeployLambdaS3"],
-            "Type": "AWS::IAM::Role",
-            "Properties": {
-              "AssumeRolePolicyDocument": {
-               "Version" : "2012-10-17",
-               "Statement": [ {
-                "Effect": "Allow",
-                "Principal": {
-                 "Service": [ "codedeploy.us-east-1.amazonaws.com" ]
-               },
-               "Action": [ "sts:AssumeRole" ]
-             } ]
-             },
-             "ManagedPolicyArns":[
-              "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda",
-              {"Ref" : "CodeDeployLambdaS3"}
-            ],
-             "Path": "/",
-             "RoleName": "CodeDeployLambdaServiceRole"
-           }
-         },
 
       "CodeDeployApplication": {
         "Type": "AWS::CodeDeploy::Application",
         "Properties": {
           "ApplicationName" : "csye6225-Lambda-function",
           "ComputePlatform": "Lambda"
-        }
-      },
-
-      "LambdaDeploymentGroup" : {
-        "DependsOn" : ["CodeDeployLambdaServiceRole"],
-        "Type" : "AWS::CodeDeploy::DeploymentGroup",
-        "Properties" : {
-          "ApplicationName" : "csye6225-Lambda-function",
-          "DeploymentConfigName" : "CodeDeployDefault.LambdaAllAtOnce",
-          "DeploymentGroupName": "csye6225-lambda-deployment",
-          "DeploymentStyle":{
-            "DeploymentOption" : "WITH_TRAFFIC_CONTROL",
-            "DeploymentType" : "BLUE_GREEN"
-          },
-          "AutoRollbackConfiguration": {
-            "Enabled": "true",
-            "Events": [ "DEPLOYMENT_FAILURE" ]
-          },
-          "ServiceRoleArn" : {
-            "Fn::GetAtt" : [
-              "CodeDeployLambdaServiceRole",
-              "Arn"
-            ]
-          }
         }
       },
 
@@ -291,5 +245,17 @@
                 }
               }
 
-    }
+    },
+
+    "Outputs" : {
+     "mySNSTopicArn" : {
+       "Description" : "SNS Arn",
+       "Value" : 
+         { "Ref": "mySNSTopic" },
+       "Export" : {
+         "Name" : "SNSARN"
+       }
+     }
   }
+
+}
