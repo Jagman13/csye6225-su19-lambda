@@ -84,7 +84,7 @@
         "DependsOn" : ["LambdaExecutionRole","CodeDeployApplication"],
         "Properties": {
           "FunctionName":"myLambda",
-          "Handler" : "EmailEvent",
+          "Handler" : "EmailEvent::handleRequest",
           "Role": {"Fn::GetAtt" : ["LambdaExecutionRole", "Arn"] },
           "Code":
             {
@@ -144,6 +144,18 @@
                         }]
                     }
                 }]
+            }
+        },
+
+        "LambdaInvokePermission": {
+          "Type": "AWS::Lambda::Permission",
+          "Properties": {
+            "Action": "lambda:InvokeFunction",
+            "Principal": "sns.amazonaws.com",
+            "SourceArn": { "Ref": "mySNSTopic" },
+            "FunctionName": {
+              "Fn::GetAtt": [ "myLambda", "Arn" ]
+              }
             }
         },
 
