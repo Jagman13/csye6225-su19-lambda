@@ -1,0 +1,45 @@
+version: 2
+jobs:
+  build:
+    filters:
+      branches:
+        only:
+          - test
+    docker:
+      - image: circleci/python:3.6.5
+    steps:
+      - checkout
+      - run:
+          name: Install packages
+          command: |
+            sudo apt update
+            sudo apt install openjdk-8-jdk
+            sudo pip install awscli
+      - run:
+          name: Build WAR
+          command: |
+            echo "Current directory ->"
+            pwd
+            echo "list"
+            ls -al
+            cd csye-6225-aws-lambda
+            echo "Current directory ->"
+            pwd
+            echo "list"
+            ls
+            ./mvnw clean package
+            echo "Current directory ->"
+            pwd
+            echo "list"
+            ls -la
+            cd target
+            echo "Current directory ->"
+            pwd
+            echo "listing all elements"
+            ls -la
+      - run:
+          name: Upload Artifact to S3
+          command: aws s3 cp ./csye-6225-aws-lambda/target/aws-lambda-0.0.1.zip s3://${S3_BUCKET_NAME}/aws-lambda-0.0.1.zip
+      - run:
+          name: Deploying Artifact to lambda function
+          command: aws lambda update-function-code --function-name myLambda --s3-bucket ${S3_BUCKET_NAME} --s3-key aws-lambda-0.0.1.zip --region ${AWS_REGION}
