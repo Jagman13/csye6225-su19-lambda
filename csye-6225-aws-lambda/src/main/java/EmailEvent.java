@@ -52,7 +52,7 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
                     .withNumber("ttl_timestamp", expirationTime);
 
             PutItemOutcome outcome = table.putItem(item);
-            context.getLogger().log(outcome.getItem().toJSONPretty());
+            //context.getLogger().log(outcome.getItem().toJSONPretty());
         }
 
         timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(Calendar.getInstance().getTime());
