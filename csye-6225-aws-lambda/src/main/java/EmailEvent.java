@@ -33,13 +33,21 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
         long currentEpochTime= System.currentTimeMillis() / 1000L;
 
         context.getLogger().log("Current epcho time:" + currentEpochTime);
-        long expirationTime = currentEpochTime + 300;
+
+        long ttl = Integer.parseInt(System.getenv("ttl")) * 60;
+
+        context.getLogger().log("TTL:" + ttl);
+
+        long expirationTime = currentEpochTime + ttl;
 
         context.getLogger().log("Expiration epcho time:" + expirationTime);
 
         String domain=System.getenv("domain");
 
         context.getLogger().log("Domain :" +domain);
+
+        String fromEmail=System.getenv("fromemail");
+
         context.getLogger().log(toEmail);
 
         QuerySpec spec = new QuerySpec()
@@ -57,7 +65,7 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
         }
         context.getLogger().log(String.valueOf(items.getAccumulatedItemCount()));
         if(items.getAccumulatedItemCount() == 0){
-            sendEmail(domain, toEmail, String.valueOf(token), context);
+            sendEmail(domain, fromEmail, toEmail, String.valueOf(token), context);
             Item item = new Item()
 
                     .withPrimaryKey("Email", toEmail)
@@ -75,10 +83,9 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
         return null;
     }
 
-    private void sendEmail(String domain, String toEmail, String token, Context context){
+    private void sendEmail(String domain, String fromEmail, String toEmail, String token, Context context){
         try {
 
-            String FROMEMAIL = "reset_password@"+domain;
             String TEXTBODY="http://"+ domain +"/reset?email="+ toEmail + "&token=" + token;
             String HTMLBODY="<p>"+TEXTBODY+"<p>";
 
@@ -95,7 +102,7 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
                                             .withCharset("UTF-8").withData(TEXTBODY)))
                             .withSubject(new Content()
                                     .withCharset("UTF-8").withData("Reset Password")))
-                    .withSource(FROMEMAIL);
+                    .withSource(fromEmail);
             client.sendEmail(request);
             context.getLogger().log("Email sent!");
         } catch (Exception ex) {

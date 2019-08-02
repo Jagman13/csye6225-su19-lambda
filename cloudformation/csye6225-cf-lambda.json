@@ -6,18 +6,27 @@
          "Default":"reset_password",
          "Type": "String"
 
-     },    "CFNUser" : {
-           "Type": "String",
-           "Default": "circleci"
-         },
-       "S3CodeDeployBucket":{
+     },    
+     "CFNUser" : {
+        "Type": "String",
+        "Default": "circleci"
+     },
+       
+      "S3CodeDeployBucket":{
          "Description": "S3 bucket name where code deploy artifacts are stored",
          "Type": "String"
        },
-       "domain":{
+       
+      "domain":{
          "Description": "domain for  for SES",
          "Type": "String",
          "Default": "csye6225-su19-kaurj.me"
+       },
+
+       "fromemail":{
+        "Description": "from address  for SES",
+         "Type": "String",
+
        }
      },
 
@@ -94,7 +103,12 @@
           "Description" : "lambda function for reset Passowrd",
           "Environment" :
             {
-              "Variables" : {"domain" : {"Ref":"domain"} }
+              "Variables" : {
+                              "domain" : {"Ref":"domain"} ,
+                              "fromemail" : {"Ref" : "fromemail"},
+                              "ttl" : "15"
+
+                            }
             },
           "Runtime": "java8",
           "Timeout": 300,
