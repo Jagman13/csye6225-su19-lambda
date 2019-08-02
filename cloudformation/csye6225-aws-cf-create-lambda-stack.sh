@@ -5,15 +5,15 @@
  help_me()
 {
 	  echo "Usage:-"
-	  echo "$0 <Application-Stack-Name> <S3CodeDeployBucket> <User> <fromaddress> <SNSTOPIC>"
+	  echo "$0 <Application-Stack-Name> <S3CodeDeployBucket> <User> <domain> <fromemail>"
 	  exit
 }
 
-	APP_STACK_NAME=$1-LambdaStack
+  APP_STACK_NAME=$1-LambdaStack
   CODEDEPLOYBUCKET=$2
   USER=$3
-  FROMADDRESS=$4
-  SNSTOPIC=$5
+  DOMAIN=$4
+  FROM=$5
 
 
 	if [ $# -ne 5 ]
@@ -27,8 +27,8 @@ echo "Creating stack..."
 aws cloudformation create-stack --stack-name $APP_STACK_NAME --template-body file://csye6225-cf-lambda.json \
 --parameters ParameterKey=S3CodeDeployBucket,ParameterValue=$CODEDEPLOYBUCKET\
  ParameterKey=CFNUser,ParameterValue=$USER\
- ParameterKey=fromaddress,ParameterValue=$FROMADDRESS\
- ParameterKey=SNSName,ParameterValue=$SNSTOPIC\
+ ParameterKey=domain,ParameterValue=$DOMAIN\
+ ParameterKey=fromemail,ParameterValue=$FROM\
  --capabilities CAPABILITY_NAMED_IAM
 
 if [ $? -eq 0 ]; then
