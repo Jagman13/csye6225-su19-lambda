@@ -88,7 +88,7 @@
           "Role": {"Fn::GetAtt" : ["LambdaExecutionRole", "Arn"] },
           "Code":
             {
-              "S3Bucket" : "code-deploy.csye6225-su19-honraoa.me",
+              "S3Bucket" : {"Ref" : "S3CodeDeployBucket"},
               "S3Key" : "aws-lambda-0.0.1.zip"
             },
           "Description" : "lambda function for reset Passowrd",
