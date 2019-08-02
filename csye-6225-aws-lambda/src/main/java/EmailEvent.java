@@ -1,5 +1,6 @@
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Iterator;
 import java.util.UUID;
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
@@ -29,7 +30,9 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
         UUID token = UUID.randomUUID();
         String toEmail= request.getRecords().get(0).getSNS().getMessage();
         long currentEpochTime= System.currentTimeMillis() / 1000L;
+        context.getLogger().log("Current epcho time:" + currentEpochTime);
         long expirationTime = currentEpochTime + 300;
+        context.getLogger().log("Expiration epcho time:" + expirationTime);
         String fromEmail="yogita@csye6225-su19-patilyo.me";
         context.getLogger().log(toEmail);
 
@@ -41,8 +44,12 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
                         .withNumber(":ttl", currentEpochTime))
                 .withConsistentRead(true);
         ItemCollection<QueryOutcome> items = table.query(spec);
-        context.getLogger().log(String.valueOf(items.getTotalCount()));
-        if(items.getTotalCount() == 0){
+        Iterator<Item> iterator = items.iterator();
+        while (iterator.hasNext()) {
+            context.getLogger().log(iterator.next().toJSONPretty());
+        }
+        context.getLogger().log(String.valueOf(items.getAccumulatedItemCount()));
+        if(items.getAccumulatedItemCount() == 0){
             sendEmail(fromEmail, toEmail, String.valueOf(token), context);
             Item item = new Item()
 
