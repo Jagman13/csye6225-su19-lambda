@@ -68,7 +68,7 @@ public class EmailEvent implements RequestHandler<SNSEvent, Object> {
     private boolean sendEmail(String domain, String fromEmail, String toEmail, String token, Context context){
         try {
 
-            String TEXTBODY="http://"+ domain +"/reset?email="+ toEmail + "&token=" + token;
+            String TEXTBODY="https://"+ domain +"/reset?email="+ toEmail + "&token=" + token;
             String HTMLBODY="<p>"+TEXTBODY+"<p>";
 
             AmazonSimpleEmailService client = AmazonSimpleEmailServiceClientBuilder.standard().withCredentials(new DefaultAWSCredentialsProviderChain()).build();
